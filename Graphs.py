@@ -143,10 +143,17 @@ class Graph:
         Returns:
            (int) El grado del nodo del grafo inicializado.
         """
-        for node in self.graph:
-            if node.get_name() == node_search.get_name():
-                return len(self.graph[node])
-        raise ValueError(f"Node {node_search.get_name()} does not exist")
+        n_output = 0
+        n_input = 0
+        if node_search.get_name() in [n.get_name() for n in self.graph]:
+            for node in self.graph:
+                if node.get_name() == node_search.get_name():  # aristas de salida
+                    n_input = len(self.graph[node])
+                elif node_search.get_name() in [n.get_name() for n in self.graph[node]]: # aristas de entrada
+                    n_output += 1
+        else:
+            raise ValueError(f"Node {node_search.get_name()} does not exist")
+        return n_output + n_input
 
     def to_file_gv(self, name_model: str, name_grafo: str, nodes: str) -> None:
         """
@@ -162,7 +169,7 @@ class Graph:
         Returns:
             (.gv) Archivo .gv para gephi.
         """
-        fichero = open(f"Results/DG-{name_model}_{nodes}.gv", 'w')
+        fichero = open(f"Results/Directed-Graph/DG-{name_model}_{nodes}.gv", 'w')
         fichero.write(f"digraph {name_grafo}" + " {\n")
 
         for node1 in self.graph:
@@ -209,6 +216,22 @@ class UndirectedGraph(Graph):
         edge_back = Edge(new_edge.get_node2(), new_edge.get_node1())
         Graph.add_edge(self, edge_back)
 
+    def get_degree(self, node_search: Node) -> int:
+        """
+        Description:
+        Obtiene el grado de un nodo en el grafo inicializado.
+
+        Args:
+            node_search (Node): nodo en el grafo del que se desea saber su grado.
+
+        Returns:
+           (int) El grado del nodo del grafo inicializado.
+        """
+        for node in self.graph:
+            if node.get_name() == node_search.get_name():
+                return len(self.graph[node])
+        raise ValueError(f"Node {node_search.get_name()} does not exist")
+
     def to_file_gv(self, name_model: str, name_grafo: str, nodes: str) -> None:
         """
         Description:
@@ -223,8 +246,7 @@ class UndirectedGraph(Graph):
         Returns:
             (.gv) Archivo .gv para gephi.
         """
-        fichero = open(f"Results/G-{name_model}_{nodes}.gv", 'w')
-
+        fichero = open(f"Results/Undirected-Graph/G-{name_model}_{nodes}.gv", 'w')
         fichero.write(f"graph {name_grafo}" + " {\n")
 
         for node1 in self.graph:

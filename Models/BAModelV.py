@@ -35,7 +35,7 @@ def build_barabasi_albert_model(c: type, n_nodes: int, d: int) -> Graph:
         list_nodes.append(node)
         g.add_node(node)
 
-    for i in range(1, n_nodes):
+    for i in range(1,n_nodes):
         random_nodes = list_nodes[:i]
         random.shuffle(random_nodes)
         for j in range(len(random_nodes)):
@@ -43,6 +43,7 @@ def build_barabasi_albert_model(c: type, n_nodes: int, d: int) -> Graph:
             p = 1 - (degree / d)
             if random.random() < p:
                 if random_nodes[j] != list_nodes[i]:
-                    g.add_edge(Edge(list_nodes[i], random_nodes[j]))
+                    if g.get_degree(list_nodes[i]) < d and g.get_degree(random_nodes[j]) < d:
+                        g.add_edge(Edge(list_nodes[i], random_nodes[j]))
 
     return g

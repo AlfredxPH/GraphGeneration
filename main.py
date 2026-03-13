@@ -3,7 +3,7 @@ Programa:               | Grafos -- Versión 1
 Programador:            | Alfredo Peña Hernández
 Descripcion:            | Biblioteca para describir y utilizar Grafos.
 Fecha de creacion:      | 05/03/2026
-Última actualizacción:  | 10/03/2026
+Última actualizacción:  | 12/03/2026
 Revision:               | Ninguna
 """
 
@@ -15,12 +15,16 @@ from Models.BAModelV import *
 from Models.DMModel import *
 
 cantiad_nodos = [50, 200, 500]
+dirigido = False
 # =========================================================
 # Primer Modelo: Modelo de Malla.
 # =========================================================
 d = 5
 for i in cantiad_nodos:
-    G = build_mesh_model(UndirectedGraph, int(i/d), d, diagonal=True)
+    if dirigido:
+        G = build_mesh_model(Graph, int(i / d), d, diagonal=True)
+    else:
+        G = build_mesh_model(UndirectedGraph, int(i/d), d, diagonal=True)
     G.to_file_gv("MeshModel", "X", str(i))
     d *= 2
 
@@ -29,7 +33,10 @@ for i in cantiad_nodos:
 # =========================================================
 for i in cantiad_nodos:
     m_edges = int(((i*(i-1))/2)*0.1)
-    G = build_erre_model(UndirectedGraph, i, m_edges)
+    if dirigido:
+        G = build_erre_model(Graph, i, m_edges)
+    else:
+        G = build_erre_model(UndirectedGraph, i, m_edges)
     G.to_file_gv("ErReModel", "X", str(i)+'-'+str(m_edges))
 
 # =========================================================
@@ -37,7 +44,10 @@ for i in cantiad_nodos:
 # =========================================================
 for i in cantiad_nodos:
     p = 0.1
-    G = build_gilbert_model(UndirectedGraph, i, p)
+    if dirigido:
+        G = build_gilbert_model(Graph, i, p)
+    else:
+        G = build_gilbert_model(UndirectedGraph, i, p)
     G.to_file_gv("GilbertModel", "X", str(i)+'-'+str(p))
 
 # =========================================================
@@ -45,7 +55,10 @@ for i in cantiad_nodos:
 # =========================================================
 for i in cantiad_nodos:
     r = 0.2
-    G = build_simgeo_model(UndirectedGraph, i, r)
+    if dirigido:
+        G = build_simgeo_model(Graph, i, r)
+    else:
+        G = build_simgeo_model(UndirectedGraph, i, r)
     G.to_file_gv("SimGeoModel", "X", str(i)+'-'+str(r))
 
 # =========================================================
@@ -53,12 +66,18 @@ for i in cantiad_nodos:
 # =========================================================
 ds = [2,4,6]
 for nodes, d in zip(cantiad_nodos,ds):
-    G = build_barabasi_albert_model(UndirectedGraph, nodes, d)
+    if dirigido:
+        G = build_barabasi_albert_model(Graph, nodes, d)
+    else:
+        G = build_barabasi_albert_model(UndirectedGraph, nodes, d)
     G.to_file_gv("Barabási-Albert", "X", f"{nodes}-{d}")
 
 # =========================================================
 # Sexto Modelo: Modelo Dorogovtsev-Mendes
 # =========================================================
 for nodes in cantiad_nodos:
-    G = build_dorogovtsev_mendes_model(UndirectedGraph, nodes)
+    if dirigido:
+        G = build_dorogovtsev_mendes_model(Graph, nodes)
+    else:
+        G = build_dorogovtsev_mendes_model(UndirectedGraph, nodes)
     G.to_file_gv("DorogovtsevMendesModel", "x", f"{nodes}")

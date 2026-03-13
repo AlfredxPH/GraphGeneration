@@ -62,7 +62,7 @@ def build_graph(c):
         s -> a
     """
     g = c()
-    for node in ('s','a','b','c','d','e','f','g','h','i'):
+    for node in ('s','a','b'):
         g.add_node(Node(node))
 
     nodo_s = Node('s')
