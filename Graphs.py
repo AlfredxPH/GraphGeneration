@@ -145,7 +145,8 @@ class Graph:
         """
         n_output = 0
         n_input = 0
-        if node_search.get_name() in [n.get_name() for n in self.graph]:
+        name_nodes = [n.get_name() for n in self.graph]
+        if node_search.get_name() in name_nodes:
             for node in self.graph:
                 if node.get_name() == node_search.get_name():  # aristas de salida
                     n_input = len(self.graph[node])
