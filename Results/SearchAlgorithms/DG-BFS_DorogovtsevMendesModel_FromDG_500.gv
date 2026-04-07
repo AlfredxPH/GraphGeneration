@@ -1,0 +1,25 @@
+digraph x {
+Nodo_79 -> Nodo_95;
+Nodo_79 -> Nodo_149;
+Nodo_79 -> Nodo_187;
+Nodo_79 -> Nodo_227;
+Nodo_79 -> Nodo_249;
+Nodo_79 -> Nodo_466;
+Nodo_95 -> Nodo_381;
+Nodo_149 -> Nodo_154;
+Nodo_149 -> Nodo_266;
+Nodo_187 -> Nodo_215;
+Nodo_187 -> Nodo_351;
+Nodo_154 -> Nodo_171;
+Nodo_154 -> Nodo_234;
+Nodo_154 -> Nodo_236;
+Nodo_154 -> Nodo_371;
+Nodo_154 -> Nodo_373;
+Nodo_154 -> Nodo_404;
+Nodo_154 -> Nodo_409;
+Nodo_171 -> Nodo_222;
+Nodo_171 -> Nodo_476;
+Nodo_371 -> Nodo_462;
+Nodo_373 -> Nodo_439;
+Nodo_409 -> Nodo_468;
+}
