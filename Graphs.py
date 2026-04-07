@@ -156,7 +156,7 @@ class Graph:
             raise ValueError(f"Node {node_search.get_name()} does not exist")
         return n_output + n_input
 
-    def to_file_gv(self, name_model: str, name_grafo: str, nodes: str) -> None:
+    def to_file_gv(self, name_model: str, name_grafo: str, nodes: str, new_repository:str=None) -> None:
         """
         Description:
         Exporta un archivo .gv del grafo inicializado.
@@ -166,11 +166,17 @@ class Graph:
             que se haya usado uno.
             name_grafo (str): Nombre del grafo inicializado.
             nodes (str): Número de nodos dentro del grafo inicializado.
+            new_repository (str): Nombre del nuevo repositorio para crear el grafo.
 
         Returns:
             (.gv) Archivo .gv para gephi.
         """
-        fichero = open(f"Results/Directed-Graph/DG-{name_model}_{nodes}.gv", 'w')
+
+        if new_repository is None:
+            fichero = open(f"Results/Directed-Graph/DG-{name_model}_{nodes}.gv", 'w')
+        else:
+            fichero = open(f"Results/{new_repository}/DG-{name_model}_{nodes}.gv", 'w')
+
         fichero.write(f"digraph {name_grafo}" + " {\n")
 
         for node1 in self.graph:
@@ -233,7 +239,7 @@ class UndirectedGraph(Graph):
                 return len(self.graph[node])
         raise ValueError(f"Node {node_search.get_name()} does not exist")
 
-    def to_file_gv(self, name_model: str, name_grafo: str, nodes: str) -> None:
+    def to_file_gv(self, name_model: str, name_grafo: str, nodes: str, new_repository:str=None) -> None:
         """
         Description:
         Exporta un archivo .gv del grafo inicializado.
@@ -243,11 +249,15 @@ class UndirectedGraph(Graph):
             que se haya usado uno.
             name_grafo (str): Nombre del grafo inicializado.
             nodes (str): Número de nodos dentro del grafo inicializado.
+            new_repository (str): Nombre del nuevo repositorio para crear el grafo.
 
         Returns:
             (.gv) Archivo .gv para gephi.
         """
-        fichero = open(f"Results/Undirected-Graph/G-{name_model}_{nodes}.gv", 'w')
+        if new_repository is None:
+            fichero = open(f"Results/Undirected-Graph/G-{name_model}_{nodes}.gv", 'w')
+        else:
+            fichero = open(f"Results/{new_repository}/G-{name_model}_{nodes}.gv", 'w')
         fichero.write(f"graph {name_grafo}" + " {\n")
 
         for node1 in self.graph:

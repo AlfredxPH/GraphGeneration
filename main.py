@@ -1,7 +1,8 @@
 """
 Programa:               | Grafos -- Versión 1
 Programador:            | Alfredo Peña Hernández
-Descripcion:            | Biblioteca para describir y utilizar Grafos.
+Descripcion:            | Biblioteca para describir y utilizar Grafos. Para ver
+                        | DFS y BFS revisar main2
 Fecha de creacion:      | 05/03/2026
 Última actualizacción:  | 12/03/2026
 Revision:               | Ninguna
