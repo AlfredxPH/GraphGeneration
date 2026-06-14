@@ -1,10 +1,11 @@
 import os
+import math
+import heapq
+import random
 from Nodes import Node
 from Edges import Edge
-import random
-import math
 from itertools import combinations
-import heapq
+
 
 class Graph:
     """
@@ -650,3 +651,292 @@ class Graph:
             f.write("}\n")
         print(f"Archivo exportado exitosamente en: {filepath}")
 
+    # =====================================================================
+    # VISUALIZACIÓN PYGAME (Algoritmo Spring - Eades 1984)
+    # =====================================================================
+
+    def randomize_positions(self, width: int, height: int):
+        """Asigna coordenadas (x, y) aleatorias a todos los nodos."""
+        for node in self.graph:
+            # Usamos los kwargs del nodo para guardar la posición
+            node.attributes['x'] = random.uniform(50, width - 50)
+            node.attributes['y'] = random.uniform(50, height - 50)
+
+    def spring_layout_step(self, width: int, height: int,
+                           c1: float = 20.0, c2: float = 100.0,
+                           c3: float = 10000.0, c4: float = 0.1):
+        """
+        Calcula y aplica una iteración del algoritmo de P. Eades.
+        Args:
+            c1: Multiplicador de atracción (fuerza del resorte).
+            c2: Longitud natural del resorte (distancia ideal entre nodos unidos).
+            c3: Multiplicador de repulsión (qué tanto se odian los nodos no unidos).
+            c4: Tamaño del paso o "temperatura" (qué tan rápido se mueven).
+        """
+        displacements = {node: [0.0, 0.0] for node in self.graph}
+        nodes = list(self.graph.keys())
+
+        # 1. Calcular Fuerza de Repulsión (Todos contra todos)
+        for i in range(len(nodes)):
+            for j in range(i + 1, len(nodes)):
+                u, v = nodes[i], nodes[j]
+
+                dx = v.attributes['x'] - u.attributes['x']
+                dy = v.attributes['y'] - u.attributes['y']
+                dist_sq = dx * dx + dy * dy
+
+                if dist_sq < 0.0001:  # Evitar división por cero
+                    dist_sq = 0.0001
+                    dx, dy = random.random(), random.random()
+
+                dist = math.sqrt(dist_sq)
+
+                # Fórmula de Eades: Repulsión = c3 / dist^2
+                force_rep = c3 / dist_sq
+
+                fx = (dx / dist) * force_rep
+                fy = (dy / dist) * force_rep
+
+                # u es empujado alejándose de v, y v alejándose de u
+                displacements[u][0] -= fx
+                displacements[u][1] -= fy
+                displacements[v][0] += fx
+                displacements[v][1] += fy
+
+        # 2. Calcular Fuerza de Atracción (Solo nodos conectados por aristas)
+        edges = self._get_unique_edges()
+        for edge in edges:
+            u = self._get_node_by_name(edge.get_node1().get_name())
+            v = self._get_node_by_name(edge.get_node2().get_name())
+
+            dx = v.attributes['x'] - u.attributes['x']
+            dy = v.attributes['y'] - u.attributes['y']
+            dist = math.sqrt(dx * dx + dy * dy)
+
+            if dist < 0.0001: dist = 0.0001
+
+            # Fórmula de Eades: Atracción = c1 * log(dist / c2)
+            force_att = c1 * math.log(dist / c2)
+
+            fx = (dx / dist) * force_att
+            fy = (dy / dist) * force_att
+
+            # u es atraído hacia v, y v hacia u
+            displacements[u][0] += fx
+            displacements[u][1] += fy
+            displacements[v][0] -= fx
+            displacements[v][1] -= fy
+
+        # 3. Aplicar los desplazamientos a las posiciones
+        for node in self.graph:
+            node.attributes['x'] += displacements[node][0] * c4
+            node.attributes['y'] += displacements[node][1] * c4
+
+            # Mantener los nodos dentro de los límites de la pantalla
+            #node.attributes['x'] = max(20, min(width-20, node.attributes['x']))
+            #node.attributes['y'] = max(20, min(height-20, node.attributes['y']))
+
+    # =====================================================================
+    # FORCE-DIRECTED LAYOUTS (Fruchterman-Reingold & Barnes-Hut)
+    # =====================================================================
+
+    def fr_step(self, width: int, height: int, temp: float, k: float):
+        """Fruchterman-Reingold estándar O(n^2)."""
+        displacements = {node: [0.0, 0.0] for node in self.graph}
+        nodes = list(self.graph.keys())
+
+        # 1. Fuerzas de Repulsión (Todos contra todos)
+        for i in range(len(nodes)):
+            for j in range(i + 1, len(nodes)):
+                u, v = nodes[i], nodes[j]
+                dx = v.attributes['x'] - u.attributes['x']
+                dy = v.attributes['y'] - u.attributes['y']
+                dist = math.hypot(dx, dy)
+
+                if dist < 0.0001:
+                    dist, dx, dy = 0.0001, random.random(), random.random()
+
+                force_rep = (k * k) / dist
+                fx, fy = (dx / dist) * force_rep, (dy / dist) * force_rep
+
+                displacements[u][0] -= fx
+                displacements[u][1] -= fy
+                displacements[v][0] += fx
+                displacements[v][1] += fy
+
+        # 2. Fuerzas de Atracción (Solo aristas)
+        for edge in self._get_unique_edges():
+            u = self._get_node_by_name(edge.get_node1().get_name())
+            v = self._get_node_by_name(edge.get_node2().get_name())
+            dx = v.attributes['x'] - u.attributes['x']
+            dy = v.attributes['y'] - u.attributes['y']
+            dist = math.hypot(dx, dy)
+            if dist < 0.0001: dist = 0.0001
+
+            force_att = (dist * dist) / k
+            fx, fy = (dx / dist) * force_att, (dy / dist) * force_att
+
+            displacements[u][0] += fx
+            displacements[u][1] += fy
+            displacements[v][0] -= fx
+            displacements[v][1] -= fy
+
+        # 3. Aplicar desplazamiento limitado por la "Temperatura"
+        self._apply_displacements(displacements, temp, width, height)
+
+    def fr_barnes_hut_step(self, width: int, height: int, temp: float, k: float, theta: float = 0.5):
+        """Fruchterman-Reingold optimizado con Barnes-Hut O(n log n)."""
+        displacements = {node: [0.0, 0.0] for node in self.graph}
+        nodes = list(self.graph.keys())
+
+        # 1. Construir QuadTree para la repulsión
+        qt = QuadNode(0, 0, width, height)
+        for node in nodes:
+            qt.insert(node)
+
+        # Función recursiva para calcular la repulsión usando Barnes-Hut
+        def calculate_bh_repulsion(u_node, q_node):
+            if q_node.mass == 0:
+                return
+
+            dx = q_node.cm_x - u_node.attributes['x']
+            dy = q_node.cm_y - u_node.attributes['y']
+            dist = math.hypot(dx, dy)
+
+            if dist < 0.0001:
+                dist, dx, dy = 0.0001, random.random(), random.random()
+
+            # Si es hoja, o si está lo suficientemente lejos (aproximación)
+            if (not q_node.children) or (q_node.size / dist < theta):
+                if q_node.graph_node != u_node:
+                    # Multiplicar la repulsión por la masa del cuadrante
+                    force_rep = ((k * k) / dist) * q_node.mass
+                    displacements[u_node][0] -= (dx / dist) * force_rep
+                    displacements[u_node][1] -= (dy / dist) * force_rep
+            else:
+                for child in q_node.children:
+                    calculate_bh_repulsion(u_node, child)
+
+        # 2. Calcular repulsión
+        for node in nodes:
+            calculate_bh_repulsion(node, qt)
+
+        # 3. Fuerzas de Atracción (Igual que el estándar)
+        for edge in self._get_unique_edges():
+            u = self._get_node_by_name(edge.get_node1().get_name())
+            v = self._get_node_by_name(edge.get_node2().get_name())
+            dx = v.attributes['x'] - u.attributes['x']
+            dy = v.attributes['y'] - u.attributes['y']
+            dist = math.hypot(dx, dy)
+            if dist < 0.0001: dist = 0.0001
+
+            force_att = (dist * dist) / k
+            fx, fy = (dx / dist) * force_att, (dy / dist) * force_att
+
+            displacements[u][0] += fx
+            displacements[u][1] += fy
+            displacements[v][0] -= fx
+            displacements[v][1] -= fy
+
+        # 4. Aplicar desplazamiento
+        self._apply_displacements(displacements, temp, width, height)
+
+    def _apply_displacements(self, displacements: dict, temp: float, width: int, height: int):
+        """Aplica las fuerzas calculadas limitadas por la temperatura."""
+        for node in self.graph:
+            dx, dy = displacements[node]
+            disp_len = math.hypot(dx, dy)
+
+            if disp_len > 0:
+                limited_disp = min(disp_len, temp)
+                node.attributes['x'] += (dx / disp_len) * limited_disp
+                node.attributes['y'] += (dy / disp_len) * limited_disp
+
+            # Mantener en la pantalla dejando un margen
+            #node.attributes['x'] = max(30, min(width - 30, node.attributes['x']))
+            #node.attributes['y'] = max(30, min(height - 30, node.attributes['y']))
+
+
+class QuadNode:
+    """Clase auxiliar para el QuadTree de Barnes-Hut."""
+
+    def __init__(self, x_min: float, y_min: float, x_max: float, y_max: float, depth: int = 0):
+        self.x_min = x_min
+        self.y_min = y_min
+        self.x_max = x_max
+        self.y_max = y_max
+        self.x_mid = (x_min + x_max) / 2
+        self.y_mid = (y_min + y_max) / 2
+        self.size = max(x_max - x_min, y_max - y_min)
+
+        # --- Control de profundidad ---
+        self.depth = depth
+        self.MAX_DEPTH = 25
+        # -------------------------------------
+
+        self.mass = 0
+        self.cm_x = 0.0
+        self.cm_y = 0.0
+        self.graph_node = None
+        self.children = []
+
+    def insert(self, node):
+        nx, ny = node.attributes['x'], node.attributes['y']
+
+        # --- Jitter (Ruido para evitar superposición exacta) ---
+        if self.mass == 1 and self.graph_node is not None:
+            gx, gy = self.graph_node.attributes['x'], self.graph_node.attributes['y']
+            if abs(gx - nx) < 0.001 and abs(gy - ny) < 0.001:
+                # Desplazar ligeramente el nuevo nodo
+                nx += random.uniform(-0.1, 0.1)
+                ny += random.uniform(-0.1, 0.1)
+                node.attributes['x'] = nx
+                node.attributes['y'] = ny
+        # -------------------------------------------------------------
+
+        # Actualizar centro de masa
+        self.cm_x = (self.cm_x * self.mass + nx) / (self.mass + 1)
+        self.cm_y = (self.cm_y * self.mass + ny) / (self.mass + 1)
+        self.mass += 1
+
+        # Si es hoja vacía
+        if self.mass == 1:
+            self.graph_node = node
+            return
+
+        # Si hay un nodo aquí, subdividimos
+        if not self.children:
+            # --- Evitar recursión infinita ---
+            if self.depth < self.MAX_DEPTH:
+                self._subdivide()
+                if self.graph_node:
+                    self._insert_into_children(self.graph_node)
+                    self.graph_node = None
+            else:
+                # Si llegamos al límite máximo, los agrupamos juntos
+                return
+
+        if self.children:
+            self._insert_into_children(node)
+
+    def _subdivide(self):
+        # Aumentamos la profundidad al crear hijos
+        self.children = [
+            QuadNode(self.x_min, self.y_min, self.x_mid, self.y_mid, self.depth + 1),  # NW
+            QuadNode(self.x_mid, self.y_min, self.x_max, self.y_mid, self.depth + 1),  # NE
+            QuadNode(self.x_min, self.y_mid, self.x_mid, self.y_max, self.depth + 1),  # SW
+            QuadNode(self.x_mid, self.y_mid, self.x_max, self.y_max, self.depth + 1)  # SE
+        ]
+
+    def _insert_into_children(self, node):
+        nx, ny = node.attributes['x'], node.attributes['y']
+        if nx < self.x_mid:
+            if ny < self.y_mid:
+                self.children[0].insert(node)
+            else:
+                self.children[2].insert(node)
+        else:
+            if ny < self.y_mid:
+                self.children[1].insert(node)
+            else:
+                self.children[3].insert(node)
